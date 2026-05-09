@@ -187,6 +187,30 @@ contract Vault is  ERC4626, Ownable, ReentrancyGuard, Pausable {
 
   }
 
+  function harvest() external {
+    require(block.timestamp >= lastHarvest + 1 days, "Too soon");
+    for(uint256 i = 0; i < strategies.length; i++) {
+      StrategyInfo storage info = strategyInfo[address(strategies[i])];
+      if(!info.active) continue;
+
+      try strategies[i].harvest() {} catch {}
+      
+      uint256 currentBalance = strategies[i].totalAssets();
+      if(currentBalance > info.deposited){
+        uint256 profit = currentBalance - info.deposited;
+        info.deposited = currentBalance;
+
+        uint256 fee = (profit * performanceFee)/ MAX_BPS;
+
+        if(fee > 0){
+          uint256 feeShares = convertToShares(fee);
+          _mint(feeRecipient, feeShares);
+          emit Harvested(profit, fee);
+      }
+      }
+    }
+  } 
+
 
 
 
