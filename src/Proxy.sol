@@ -13,33 +13,31 @@ contract Proxy {
    _setAdmin(msg.sender);
   }
    
-  function _setImplementation(address _impl)private {
+  function _setImplementation(address _impl) private {
+    bytes32 slot = IMPLEMENTATION_SLOT;
     assembly {
-      sstore(IMPLEMENTATION_SLOT, _impl)
+      sstore(slot, _impl)
     }
   }
 
-  function _setAdmin(address _admin)private{
-    assembly{
-      sstore(IMPLEMENTATION_SLOT,, _impl)
-    }
-  }
-
-  function _setAdmin(address _admin)private{
+  function _setAdmin(address _admin) private {
+    bytes32 slot = ADMIN_SLOT;
     assembly {
-      sstore(ADMIN_SLOT, _admin)
+      sstore(slot, _admin)
     }
   }
 
   function getImplementation() public view returns (address impl) {
+    bytes32 slot = IMPLEMENTATION_SLOT;
     assembly {
-      impl := sload(IMPLEMENTATION_SLOT)
+      impl := sload(slot)
     }
   }
 
   function getAdmin() public view returns (address adm) {
+    bytes32 slot = ADMIN_SLOT;
     assembly {
-      adm := sload(ADMIN_SLOT)
+        adm := sload(slot)
     }
   }
 
@@ -58,4 +56,6 @@ contract Proxy {
     require(success, "Delegatecall failed");
 
   }
+
+  receive() external payable {}
 }
