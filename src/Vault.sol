@@ -102,6 +102,50 @@ contract Vault is  ERC4626, Ownable, ReentrancyGuard, Pausable {
     return shares;
   }
 
+    function _deployToStrategies() internal {
+    uint256 idle = IERC20(asset()).balanceOf(address(this));
+    if(idle == 0) return;
+
+    for(uint256 i = 0; i < strategies.length; i++){
+
+      StrategyInfo storage info = strategyInfo[address(strategies[i])];
+      if(!info.active) continue;
+      
+      uint256 amount = idle * info.allocation / MAX_BPS;
+      if(amount == 0) continue;
+        
+      IERC20(asset()).safeIncreaseAllowance(address((strategies[i])), amount);
+      strategies[i].deposit(amount);
+      info.deposited += amount;
+    }
+  }
+
+  function _withdrawFromStrategies(uint256 amounNeeded) internal {
+    uint256 remaining = amounNeeded;
+    for(uint256 i = 0; i < strategies.length; i++){
+      StrategyInfo storage info = strategyInfo[address(strategies[i])];
+      if(!info.active) continue;
+      if(info.deposited == 0) continue;
+      
+      uint256 available = strategies[i].totalAssets();
+
+      uint256 toWithdraw = remaining > available ? available : remaining;
+      
+      uint256 actualAmount = strategies[i].withdraw(toWithdraw);
+
+      if(actualAmount >= info.deposited){
+        info.deposited = 0;
+      }else {
+        info.deposited -= actualAmount;
+      }
+
+      remaining -= actualAmount;
+
+      if(remaining == 0) break;
+    }
+    require(remaining == 0, "Insufficient liquidity");
+  }
+
 
 
 
