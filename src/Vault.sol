@@ -71,5 +71,38 @@ contract Vault is  ERC4626, Ownable, ReentrancyGuard, Pausable {
     return total;
   }
 
+    function deposit(uint256 assets, address receiver)
+  public
+  override
+  whenNotPaused
+  nonReentrant
+  returns(uint256)
+  {
+    require(assets >= MIN_DEPOSIT, "Deposit too small");
+    uint256 shares = super.deposit(assets, receiver);
+    _deployToStrategies();
+    return shares;
+  }
+
+    function withdraw(uint256 assets, address receiver, address owner)
+  public
+  override
+  whenNotPaused
+  nonReentrant
+  returns(uint256)
+  {
+    require(assets >= MIN_DEPOSIT , "Withdraw too small");
+    uint256 idle = IERC20(asset()).balanceOf(address(this));
+
+    if(assets > idle){
+      _withdrawFromStrategies(assets - idle);
+    }
+
+    uint256 shares = super.withdraw(assets, receiver,owner);
+    return shares;
+  }
+
+
+
 
 }
