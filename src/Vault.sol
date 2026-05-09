@@ -205,13 +205,33 @@ contract Vault is  ERC4626, Ownable, ReentrancyGuard, Pausable {
         if(fee > 0){
           uint256 feeShares = convertToShares(fee);
           _mint(feeRecipient, feeShares);
-          emit Harvested(profit, fee);
-      }
+          emit Harvested(profit, fee);   
+        }
+
       }
     }
+    lastHarvest = block.timestamp;
   } 
 
 
+  function pause() external onlyOwner {
+    _pause();
+  }
+
+  function unpause() external onlyOwner {
+    _unpause();
+  }
+
+  function setPerformanceFee(uint256 newFee) external onlyOwner {
+    require(newFee <= MAX_PERFORMANCE_FEE, "Fee too high");
+    performanceFee = newFee;
+    emit FeeUpdated(newFee);
+  }
+
+  function setFeeRecipient(address newRecipient) external onlyOwner {
+    require(newRecipient != address(0), "Invalid address");
+    feeRecipient = newRecipient;
+  }
 
 
 
