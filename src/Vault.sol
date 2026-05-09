@@ -233,6 +233,4 @@ contract Vault is  ERC4626, Ownable, ReentrancyGuard, Pausable {
     feeRecipient = newRecipient;
   }
 
-
-
 }
