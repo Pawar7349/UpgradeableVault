@@ -39,7 +39,7 @@ contract VaultV1 is ERC4626Upgradeable, OwnableUpgradeable, ReentrancyGuard, Pau
 
   mapping(address => StrategyInfo) public strategyInfo;
 
-  uint256 public performanceFee = 1000;
+  uint256 public performanceFee;
   address public feeRecipient;
   uint256 public lastHarvest;
 
@@ -58,6 +58,7 @@ contract VaultV1 is ERC4626Upgradeable, OwnableUpgradeable, ReentrancyGuard, Pau
     require(_feeRecipient != address(0), "Invalid fee recipient");
     feeRecipient = _feeRecipient;
     lastHarvest = block.timestamp;
+    performanceFee = 1000;
     _pause();
   }
 
@@ -86,8 +87,9 @@ contract VaultV1 is ERC4626Upgradeable, OwnableUpgradeable, ReentrancyGuard, Pau
     return shares;
   }
 
-    function withdraw(uint256 assets, address receiver, address owner)
+  function withdraw(uint256 assets, address receiver, address owner)
   public
+  virtual
   override
   whenNotPaused
   nonReentrant
