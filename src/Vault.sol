@@ -146,6 +146,48 @@ contract Vault is  ERC4626, Ownable, ReentrancyGuard, Pausable {
     require(remaining == 0, "Insufficient liquidity");
   }
 
+  function addStrategy(address strategy, uint256 allocation) external onlyOwner {
+    require(strategy != address(0), "Invalid strategy");
+    require(!strategyInfo[strategy].active, "Strategy already exists");
+    require(strategies.length < MAX_STRATEGIES, "Stratergy limit exceed");
+    require(IStrategy(strategy).asset() == asset(), "Asset mismatch");
+    require(allocation > 0 && allocation <= MAX_BPS, "Invalid allocation");
+    
+    strategies.push(IStrategy(strategy));
+    
+    strategyInfo[strategy] = StrategyInfo({
+      active:true,
+      allocation: allocation,
+      deposited:0
+    });
+
+    emit StrategyAdded(strategy, allocation);
+  }
+
+  function removestrategy(address strategy) external onlyOwner {
+    require(strategyInfo[strategy].active, "Strategy not active");
+    
+    StrategyInfo storage info = strategyInfo[strategy];
+    if(info.deposited > 0){
+      IStrategy(strategy).withdraw(info.deposited);
+      info.deposited = 0;
+    }
+    
+    for(uint256 i = 0; i < strategies.length; i++) {
+      if(address(strategies[i]) == strategy){
+        strategies[i] = strategies[strategies.length -1];
+        strategies.pop();
+        break;
+      }
+    }
+    info.active = false;
+    
+
+    emit StrategyRemoved(strategy);
+
+  }
+
+
 
 
 
