@@ -58,3 +58,18 @@ contract Vault is  ERC4626, Ownable, ReentrancyGuard, Pausable {
    lastHarvest  = block.timestamp;
    _pause();
   }
+
+  function totalAssets() public view override returns(uint256){
+    uint256 total = IERC20(asset()).balanceOf(address(this));
+
+    for(uint256 i = 0; i < strategies.length; i++){
+      if (strategyInfo[address(strategies[i])].active) {
+            total += strategies[i].totalAssets();
+      }
+    }
+
+    return total;
+  }
+
+
+}
